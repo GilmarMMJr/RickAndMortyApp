@@ -1,0 +1,21 @@
+PODS:
+  - SDKNetwork (1.0.0)
+
+DEPENDENCIES:
+  - SDKNetwork (from `https://github.com/GilmarMMJr/SDKNetwork.git`)
+
+EXTERNAL SOURCES:
+  SDKNetwork:
+    :git: https://github.com/GilmarMMJr/SDKNetwork.git
+
+CHECKOUT OPTIONS:
+  SDKNetwork:
+    :commit: de1fd960a396f9d28080d14c56a0f0a3be2b9c99
+    :git: https://github.com/GilmarMMJr/SDKNetwork.git
+
+SPEC CHECKSUMS:
+  SDKNetwork: ed6213e68e599199e80d14771665a4cafeedb598
+
+PODFILE CHECKSUM: e41dfc10237b30a17f5a444b836e4c3c300e4749
+
+COCOAPODS: 1.15.2
