@@ -6,10 +6,14 @@
 //
 
 import UIKit
+import Combine
 
 class CharacterListViewController: UIViewController {
+    
     // MARK: - Properties
     private let viewModel = CharacterListViewModel()
+    private var cancellables = Set<AnyCancellable>()
+    private var characters: [Character] = []
     
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
@@ -30,7 +34,7 @@ class CharacterListViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        bindViewModel()
+        setupBindings()
         viewModel.fetchCharacters()
     }
     
@@ -38,10 +42,9 @@ class CharacterListViewController: UIViewController {
     private func setupUI() {
         title = "Rick and Morty Characters"
         view.backgroundColor = .systemBackground
-        
         view.addSubview(tableView)
         view.addSubview(activityIndicator)
-    
+        
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -54,19 +57,29 @@ class CharacterListViewController: UIViewController {
     }
     
     // MARK: - Bind ViewModel
-    private func bindViewModel() {
-        viewModel.onCharactersUpdated = { [weak self] in
-            self?.tableView.reloadData()
-        }
+    private func setupBindings() {
+        // Observa mudanças no isLoading e exibe ou oculta o indicador de carregamento
+        viewModel.$isLoading
+            .sink { [weak self] isLoading in
+                self?.showLoading(isLoading)
+            }
+            .store(in: &cancellables)
         
-        viewModel.onError = { [weak self] message in
-            self?.showError(message: message)
-        }
+        // Observa mudanças nos personagens e recarrega a tabela
+        viewModel.$characters
+            .sink { [weak self] characters in
+                self?.characters = characters
+                self?.tableView.reloadData()
+            }
+            .store(in: &cancellables)
         
-        viewModel.onLoadingStateChanged = { [weak self] isLoading in
-            self?.showLoading(isLoading)
-            
-        }
+        // Observa mudanças na mensagem de erro e exibe um alerta
+        viewModel.$errorMessage
+            .compactMap { $0 } // Remove valores nulos
+            .sink { [weak self] message in
+                self?.showError(message: message)
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Helpers
@@ -80,30 +93,24 @@ class CharacterListViewController: UIViewController {
     }
     
     private func showError(message: String) {
-        let alert = UIAlertController(title: "Error",
-                                      message: message,
-                                      preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK",
-                                      style: .default))
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
 }
 
 // MARK: - UITableViewDelegate, UITableViewDataSource
 extension CharacterListViewController: UITableViewDelegate, UITableViewDataSource {
-    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-            return viewModel.numberOfCharacters()
-        }
-
-        func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-            guard let cell = tableView.dequeueReusableCell(withIdentifier: CharacterCell.identifier, for: indexPath) as? CharacterCell else {
-                return UITableViewCell()
-            }
-            let character = viewModel.character(at: indexPath.row)
-            cell.configure(with: character)
-            return cell
-        }
+        return characters.count
+    }
     
-    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: CharacterCell.identifier, for: indexPath) as? CharacterCell else {
+            return UITableViewCell()
+        }
+        let character = characters[indexPath.row]
+        cell.configure(with: character)
+        return cell
+    }
 }

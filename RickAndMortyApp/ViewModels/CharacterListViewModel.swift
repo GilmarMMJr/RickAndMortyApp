@@ -7,49 +7,33 @@
 
 import Foundation
 import SDKNetwork
+import Combine
 
 class CharacterListViewModel {
-    private let provider: NetworkProviderProtocol
-    private var characters: [Character] = []
-    
-    var onCharactersUpdated: (() -> Void)?
-    var onError: ((String) -> Void)?
-    var onLoadingStateChanged: ((Bool) -> Void)?
-    
-    init(provider: NetworkProviderProtocol = NetworkProvider()) {
-        self.provider = provider
+    private let service: APIServiceProtocol
+    private var cancellables = Set<AnyCancellable>()
+
+    @Published var isLoading: Bool = false
+    @Published var characters: [Character] = []
+    @Published var errorMessage: String?
+
+    init(service: APIServiceProtocol = CharacterService()) {
+        self.service = service
     }
-    
+
     func fetchCharacters() {
-        let url = "https://rickandmortyapi.com/api/character"
-        let headers = ["Content-Type": "application/json"]
-        
-        onLoadingStateChanged?(true)
-        
-        provider.request(url: url,
-                         headers: headers,
-                         body: nil,
-                         queryParams: [:],
-                         method: "GET") { [weak self] (result: Result<CharacterResponse, Error>) in
-            guard let self = self else { return }
-            DispatchQueue.main.async {
-                self.onLoadingStateChanged?(false)
-                switch result {
-                case .success(let response):
-                    self.characters = response.results
-                    self.onCharactersUpdated?()
-                case .failure(let error):
-                    self.onError?(error.localizedDescription)
+        isLoading = true
+
+        service.fetchCharacters()
+            .sink(receiveCompletion: { [weak self] completion in
+                self?.isLoading = false
+                if case .failure(let error) = completion {
+                    self?.errorMessage = error.localizedDescription
                 }
-            }
-        }
-    }
-    
-    func numberOfCharacters() -> Int {
-        return characters.count
-    }
-    
-    func character(at index: Int) -> Character {
-         return characters[index]
+            }, receiveValue: { [weak self] characters in
+                self?.characters = characters
+            })
+            .store(in: &cancellables)
     }
 }
+
