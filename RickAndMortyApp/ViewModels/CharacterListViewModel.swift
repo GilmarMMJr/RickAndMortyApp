@@ -23,8 +23,9 @@ class CharacterListViewModel {
 
     func fetchCharacters() {
         isLoading = true
-
-        service.fetchCharacters()
+        let parameters = CharacterRequestFactory.allCharacters()
+        
+        service.fetchCharacters(with: parameters)
             .sink(receiveCompletion: { [weak self] completion in
                 self?.isLoading = false
                 if case .failure(let error) = completion {

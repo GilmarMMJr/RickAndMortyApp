@@ -10,7 +10,7 @@ import Combine
 import SDKNetwork
 
 protocol APIServiceProtocol {
-    func fetchCharacters() -> AnyPublisher<[Character], Error>
+    func fetchCharacters(with parameters: RequestParameters) -> AnyPublisher<[Character], Error>
 }
 
 class CharacterService: APIServiceProtocol {
@@ -20,19 +20,14 @@ class CharacterService: APIServiceProtocol {
         self.provider = provider
     }
 
-    func fetchCharacters() -> AnyPublisher<[Character], Error> {
-        let url = "https://rickandmortyapi.com/api/character"
-        let headers = ["Content-Type": "application/json"]
-        let body: Data? = nil
-        let queryParams = [String: String]()
-        let method = "GET"
-
+    
+    func fetchCharacters(with parameters: RequestParameters) -> AnyPublisher<[Character], Error> {
         return Future<[Character], Error> { [weak self] promise in
-            self?.provider.request(url: url,
-                                   headers: headers,
-                                   body: body,
-                                   queryParams: queryParams,
-                                   method: method) { (result: Result<CharacterResponse, Error>) in
+            self?.provider.request(url: parameters.url,
+                                   headers: parameters.headers,
+                                   body: parameters.body,
+                                   queryParams: parameters.queryParams,
+                                   method: parameters.method) { (result: Result<CharacterResponse, Error>) in
                 switch result {
                 case .success(let response):
                     promise(.success(response.results))

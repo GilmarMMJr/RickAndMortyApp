@@ -12,4 +12,5 @@ public struct Character: Codable {
     let name: String
     let status: String
     let species: String
+    let image: String
 }
