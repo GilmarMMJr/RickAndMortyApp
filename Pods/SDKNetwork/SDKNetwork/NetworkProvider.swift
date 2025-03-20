@@ -53,7 +53,7 @@ public class NetworkProvider: NetworkProviderProtocol {
             if let data = data {
                 do {
                     if let responseString = String(data: data, encoding: .utf8) {
-                        print("Response: \(responseString)")
+                       print("Response: \(responseString)")
                     }
                     let entity = try JSONDecoder().decode(T.self, from: data)
                     return completion(.success(entity))

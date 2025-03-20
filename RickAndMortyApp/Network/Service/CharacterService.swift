@@ -20,7 +20,6 @@ class CharacterService: APIServiceProtocol {
         self.provider = provider
     }
 
-    
     func fetchCharacters(with parameters: RequestParameters) -> AnyPublisher<[Character], Error> {
         return Future<[Character], Error> { [weak self] promise in
             self?.provider.request(url: parameters.url,

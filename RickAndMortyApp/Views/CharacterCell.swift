@@ -79,11 +79,17 @@ class CharacterCell: UITableViewCell {
     func configure(with character: Character) {
         nameLabel.text = character.name
         speciesLabel.text = character.species
+        characterImageView.image = UIImage(systemName: "person.circle.fill")
         
         if let imageURL = URL(string: character.image) {
-            loadImage(from: imageURL)
-        } else {
-            characterImageView.image = UIImage(systemName: "person.circle.fill")
+            loadCharacterImage(from: imageURL)
+        }
+    }
+    
+    // MARK: - Load Image
+    func loadCharacterImage(from url: URL) {
+        ImageService.shared.loadImage(from: url) { [weak self] image in
+            self?.characterImageView.image = image
         }
     }
     
@@ -92,21 +98,5 @@ class CharacterCell: UITableViewCell {
         characterImageView.image = nil
         nameLabel.text = nil
         speciesLabel.text = nil
-    }
-    
-    // MARK: - Load Image (Simples)
-    private func loadImage(from url: URL) {
-        DispatchQueue.global(qos: .background).async {
-            if let data = try? Data(contentsOf: url),
-               let image = UIImage(data: data) {
-                DispatchQueue.main.async {
-                    self.characterImageView.image = image
-                }
-            } else {
-                DispatchQueue.main.async {
-                    self.characterImageView.image = UIImage(systemName: "person.circle.fill")
-                }
-            }
-        }
     }
 }
